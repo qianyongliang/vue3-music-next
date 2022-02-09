@@ -15,6 +15,8 @@
     "vuex": "^4.0.0-0",
     "@better-scroll/core": "^2.2.1",
     "@better-scroll/slide": "^2.2.1",
+    "@better-scroll/observe-dom": "^2.2.1",
+    "@better-scroll/pull-up": "^2.2.1",
     "vue3-lazy": "^1.0.0-alpha.1"
   },
   "devDependencies": {

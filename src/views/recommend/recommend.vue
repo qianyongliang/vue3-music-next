@@ -1,6 +1,6 @@
 <template>
   <div class="recommend">
-    <div class="recommend-content">
+    <Scroll class="recommend-content">
       <div>
         <!-- 轮播图 -->
         <div class="slider-wrapper">
@@ -25,29 +25,41 @@
           </ul>
         </div>
       </div>
-    </div>
+    </Scroll>
   </div>
 </template>
-<script>
+<script lang="ts">
 import { defineComponent, reactive, toRefs, computed } from 'vue'
-import { getRecommend } from '@/service/recommend.ts'
-import Slider from '@/components/base/slider/slider'
+import { getRecommend } from '@/service/recommend'
+import Slider from '@/components/base/slider/slider.vue'
+import Scroll from '@/components/base/scroll/scroll.vue'
+
+interface State {
+  sliders: {
+    [key: string]: string
+  }[]
+  albums: {
+    [key: string]: string
+  }[]
+  loading: boolean
+}
 
 export default defineComponent({
   name: 'recommend',
   components: {
-    Slider
+    Slider,
+    Scroll
   },
   setup () {
     const state = reactive({
       sliders: [],
       albums: [],
-      loading: computed(() => {
+      loading: computed((): boolean => {
         return !state.sliders.length && !state.albums.length
       })
-    })
+    }) as State
     const getRecommendRes = () => {
-      getRecommend().then((res) => {
+      getRecommend().then((res: any) => {
         state.sliders = res.sliders
         state.albums = res.albums
       })

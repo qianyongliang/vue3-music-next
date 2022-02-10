@@ -1,15 +1,15 @@
 import { get } from './base'
 
-interface Recommend {
+interface Singer {
   [key: string]: {
     [key: string]: any
   }[]
 }
 
 // 推荐数据
-export const getRecommend = () => {
-  return new Promise<Recommend>((resolve, reject) => {
-    get('/api/getRecommend')
+export const getSingerList = () => {
+  return new Promise<Singer>((resolve, reject) => {
+    get('/api/getSingerList')
       .then((res) => {
         resolve(res)
       })

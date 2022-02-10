@@ -17,6 +17,9 @@ const User = () =>
   import(
     /* webpackChunkName: "user-center" */ '../views/userCenter/user-center.vue'
   )
+// 推荐歌单详情
+const Album = () =>
+  import(/* webpackChunkName: "album" */ '@/views/album/album.vue')
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -26,7 +29,13 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/recommend',
     name: 'Recommend',
-    component: Recommend
+    component: Recommend,
+    children: [
+      {
+        path: ':id',
+        component: Album
+      }
+    ]
   },
   {
     path: '/singer',

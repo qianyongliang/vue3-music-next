@@ -40,6 +40,7 @@
     "eslint-plugin-vue": "^7.0.0",
     "node-sass": "^6.0.1",
     "sass-loader": "^10.1.0",
-    "typescript": "~4.1.5"
+    "typescript": "~4.1.5",
+    "pinyin": "^2.9.1"
   }
 }

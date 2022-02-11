@@ -48,7 +48,9 @@
 
 <script lang="ts">
 import { defineComponent, PropType, reactive, toRefs } from 'vue'
-import Scroll from '@/components/base/scroll/scroll.vue'
+import Scroll from '@/components/wrap-scroll/index'
+import userFixed from './use-fixed'
+import useShortcut from './use-shortcut'
 
 interface Data {
   title: string
@@ -67,32 +69,34 @@ export default defineComponent({
       }
     }
   },
-  setup () {
-    const state = reactive({
-      fixedTitle: '',
-      fixedStyle: '',
-      currentIndex: 0,
-      shortcutList: []
-    })
+  emits: ['select'],
+  setup (props, { emit }) {
+    const { groupRef, fixedTitle, fixedStyle, currentIndex, onScroll } =
+      userFixed(props)
+    const {
+      shortcutList,
+      scrollRef,
+      onShortcutTouchStart,
+      onShortcutTouchMove
+    } = useShortcut(props, groupRef)
+
     const onItemClick = (item: any) => {
-      console.log(item)
-    }
-    const onShortcutTouchStart = () => {
-      console.log('11')
-    }
-    const onShortcutTouchMove = () => {
-      console.log('11')
-    }
-    const onScroll = () => {
-      console.log('11')
+      emit('select', item)
     }
 
     return {
-      ...toRefs(state),
       onItemClick,
+      // userFixed
+      groupRef,
+      fixedTitle,
+      fixedStyle,
+      currentIndex,
+      onScroll,
+      // useShortcut
+      shortcutList,
+      scrollRef,
       onShortcutTouchStart,
-      onShortcutTouchMove,
-      onScroll
+      onShortcutTouchMove
     }
   }
 })

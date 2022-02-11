@@ -6,6 +6,9 @@ const Recommend = () =>
 // 歌手
 const Singer = () =>
   import(/* webpackChunkName: "singer" */ '../views/singer/singer.vue')
+const SingerDetail = () =>
+  import(/* webpackChunkName: "singer" */ '../views/singer/singer-detail.vue')
+
 // 排行
 const TopList = () =>
   import(/* webpackChunkName: "top-list" */ '../views/topList/top-list.vue')
@@ -40,7 +43,13 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/singer',
     name: 'Singer',
-    component: Singer
+    component: Singer,
+    children: [
+      {
+        path: ':id',
+        component: SingerDetail
+      }
+    ]
   },
   {
     path: '/top-list',

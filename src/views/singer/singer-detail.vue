@@ -1,12 +1,23 @@
 <template>
-  <div class="singer-detail">歌手详情</div>
+  <div class="singer-detail">
+    <music-list
+      :songs="songs"
+      :title="title"
+      :pic="pic"
+      :loading="loading"
+    ></music-list>
+  </div>
 </template>
-<script>
+<script lang="ts">
+import createDetailComponent from '@/assets/ts/create-detail-component'
 import { defineComponent } from 'vue'
+import { getSingerDetail } from '@/service/singer'
+import { SINGER_KEY } from '@/assets/ts/constant'
 
-export default defineComponent({
-  name: 'singer-detail'
-})
+export default defineComponent(
+  createDetailComponent('singer-detail', SINGER_KEY, getSingerDetail)
+)
+
 </script>
 <style lang="scss" scoped>
 .singer-detail {

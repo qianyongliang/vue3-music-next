@@ -13,7 +13,7 @@ module.exports = {
     }
   },
   devServer: {
-    before(app) {
+    before (app) {
       registerRouter(app)
     }
   }

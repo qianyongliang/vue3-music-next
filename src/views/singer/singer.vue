@@ -10,7 +10,7 @@
     </router-view>
   </div>
 </template>
-<script>
+<script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
 import { useRouter } from 'vue-router'
 import SingerList from '@/components/singer-list/singer-list'

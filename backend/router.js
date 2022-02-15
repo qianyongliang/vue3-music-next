@@ -21,10 +21,55 @@ const getUid = () => {
   return '' + ((Math.round(2147483647 * Math.random()) * t) % 1e10)
 }
 
+// 合并多个歌手的姓名
+const mergeSinger = (singer) => {
+  const ret = []
+  if (!singer) {
+    return ''
+  }
+  singer.forEach((s) => {
+    ret.push(s.name)
+  })
+  return ret.join('/')
+}
+// 处理歌曲列表
+const handleSongList = (list) => {
+  const songList = []
+
+  list.forEach((item) => {
+    const info = item.songInfo || item
+    if (info.pay.pay_play !== 0 || !info.interval) {
+      // 过滤付费歌曲和获取不到时长的歌曲
+      return
+    }
+
+    // 构造歌曲的数据结构
+    const song = {
+      id: info.id,
+      mid: info.mid,
+      name: info.name,
+      singer: mergeSinger(info.singer),
+      url: '', // 在另一个接口获取
+      duration: info.interval,
+      pic: info.album.mid
+        ? `https://y.gtimg.cn/music/photo_new/T002R800x800M000${info.album.mid}.jpg?max_age=2592000`
+        : fallbackPicUrl,
+      album: info.album.name
+    }
+
+    songList.push(song)
+  })
+
+  return songList
+}
+
 // 注册后端路由
 function registerRouter (app) {
   registerRecommend(app)
   registerSingerList(app)
+  registerSingerDetail(app)
+  registerAlbum(app)
+  registerTopList(app)
 }
 
 // 注册推荐列表接口路由
@@ -68,7 +113,7 @@ const registerRecommend = (app) => {
         const { data } = _res
         if (data.code === ERR_OK) {
           // 处理轮播图数据
-          const focusList = data.focus.data.shelf.v_niche[0].v_card
+          const focusList = data.focus?.data?.shelf?.v_niche[0]?.v_card || []
           const sliders = []
           const jumpPrefixMap = {
             10002: 'https://y.qq.com/n/yqq/album/',
@@ -155,7 +200,7 @@ const registerSingerList = (app) => {
         const { data } = _res
         if (data.code === ERR_OK) {
           // 处理歌手数据
-          const singerList = data.singerList.data.singerlist
+          const singerList = data.singerList?.data?.singerlist || []
 
           // 构造歌手 Map 数据结构
           const singerMap = {
@@ -229,6 +274,165 @@ const registerSingerList = (app) => {
       })
     )
   }
+}
+
+// 注册歌手详情接口路由
+const registerSingerDetail = (app) => {
+  app.get('/api/getSingerDetail', (req, res) => {
+    const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
+
+    const data = JSON.stringify({
+      comm: { ct: 24, cv: 0 },
+      singerSongList: {
+        method: 'GetSingerSongList',
+        param: { order: 1, singerMid: req.query.mid, begin: 0, num: 100 },
+        module: 'musichall.song_list_server'
+      }
+    })
+
+    const randomKey = getRandomVal('getSingerSong')
+    const sign = getSecuritySign(data)
+
+    http
+      .request({
+        url,
+        params: {
+          sign,
+          '-': randomKey,
+          data
+        },
+        method: 'get'
+      })
+      .then((_res) => {
+        const { data } = _res
+        if (data.code === ERR_OK) {
+
+          const list = data.singerSongList?.data?.songList || []
+          console.log(list)
+          // 歌单详情、榜单详情接口都有类似处理逻辑，固封装成函数
+          const songList = handleSongList(list)
+
+          res.json({
+            code: ERR_OK,
+            result: {
+              songs: songList
+            }
+          })
+        } else {
+          res.json(data)
+        }
+      })
+  })
+}
+// 注册歌单专辑接口
+const registerAlbum = (app) => {
+  app.get('/api/getAlbum', (req, res) => {
+    const data = {
+      req_0: {
+        module: 'srf_diss_info.DissInfoServer',
+        method: 'CgiGetDiss',
+        param: {
+          disstid: Number(req.query.id),
+          onlysonglist: 1,
+          song_begin: 0,
+          song_num: 100
+        }
+      },
+      comm: {
+        g_tk: token,
+        uin: '0',
+        format: 'json',
+        platform: 'h5'
+      }
+    }
+    const sign = getSecuritySign(JSON.stringify(data))
+
+    const url = `https://u.y.qq.com/cgi-bin/musics.fcg?_=${getRandomVal()}&sign=${sign}`
+
+    http
+      .request({
+        url,
+        data,
+        method: 'post'
+      })
+      .then((_res) => {
+        const { data } = _res
+        if (data.code === ERR_OK) {
+          const list = data.req_0.data?.songlist || []
+          const songList = handleSongList(list)
+
+          res.json({
+            code: ERR_OK,
+            result: {
+              songs: songList
+            }
+          })
+        } else {
+          res.json(data)
+        }
+      })
+  })
+}
+
+// 注册排行榜接口
+const registerTopList = (app) => {
+  app.get('/api/getTopList', (req, res) => {
+    const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
+    const data = JSON.stringify({
+      comm: { ct: 24 },
+      toplist: {
+        module: 'musicToplist.ToplistInfoServer',
+        method: 'GetAll',
+        param: {}
+      }
+    })
+    const randomKey = getRandomVal('recom')
+    const sign = getSecuritySign(data)
+
+    http
+      .request({
+        url: '/api/getTopList',
+        params: {
+          sign,
+          '-': randomKey,
+          data
+        },
+        method: 'get'
+      })
+      .then((_res) => {
+        const { data } = _res
+        if (data.code === ERR_OK) {
+          const topList = []
+          const group = data.toplist?.data?.group
+
+          group.forEach((item) => {
+            item.toplist.forEach((listItem) => {
+              topList.push({
+                id: listItem.topId,
+                pic: listItem.frontPicUrl,
+                name: listItem.title,
+                period: listItem.period,
+                songList: listItem.song.map((songItem) => {
+                  return {
+                    id: songItem.songId,
+                    singerName: songItem.singerName,
+                    songName: songItem.title
+                  }
+                })
+              })
+            })
+          })
+          res.json({
+            code: ERR_OK,
+            result: {
+              topList
+            }
+          })
+        } else {
+          res.json(data)
+        }
+      })
+  })
 }
 
 module.exports = registerRouter

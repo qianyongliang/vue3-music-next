@@ -7,7 +7,7 @@ interface IPromise {
 }
 
 // 歌手列表
-export const getSingerList = () => {
+export const getSingerList = () :Promise<IPromise> => {
   return new Promise<IPromise>((resolve, reject) => {
     get('/api/getSingerList')
       .then((res) => {

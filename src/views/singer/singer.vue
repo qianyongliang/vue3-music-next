@@ -2,7 +2,7 @@
   <div class="singer">
     <singer-list :data="singers" @select="selectSinger"></singer-list>
 
-    <!-- outer-view 的 slot 固定写法， 主要使用 <transition> 和 <keep-alive> 组件来包裹你的路由组件。-->
+    <!-- router-view 的 slot 固定写法， 主要使用 <transition> 和 <keep-alive> 组件来包裹你的路由组件。-->
     <router-view v-slot="{ Component }">
       <transition appear name="slide">
         <component :is="Component" :data="selectedSinger" />
@@ -13,9 +13,22 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
 import { useRouter } from 'vue-router'
-import SingerList from '@/components/singer-list/singer-list'
+import SingerList from '@/components/singer-list/singer-list.vue'
 import { getSingerList } from '@/service/singer'
 import { SINGER_KEY } from '@/assets/ts/constant'
+
+interface Singers {
+  [key: string]: string
+}
+
+interface State {
+  singers: {
+    [key: string]: string
+  }[]
+  selectedSinger: {
+    [key: string]: string
+  }
+}
 
 export default defineComponent({
   name: 'singer',
@@ -27,18 +40,17 @@ export default defineComponent({
     const state = reactive({
       singers: [],
       selectedSinger: {}
-    })
+    }) as State
 
     // 获取歌手数据
     const getSingerListRes = () => {
       getSingerList().then((res) => {
         state.singers = res.singers
-        console.log(res)
       })
     }
     getSingerListRes()
 
-    const selectSinger = (singer) => {
+    const selectSinger = (singer: Singers) => {
       state.selectedSinger = singer
       cacheAlbum(singer)
       router.push({
@@ -47,7 +59,7 @@ export default defineComponent({
     }
 
     // 缓存点击的歌手
-    const cacheAlbum = (singer) => {
+    const cacheAlbum = (singer: Singers) => {
       sessionStorage.setItem(SINGER_KEY, JSON.stringify(singer))
     }
 

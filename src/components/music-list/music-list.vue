@@ -13,7 +13,7 @@
       </div>
       <div class="filter" :style="filterStyle"></div>
     </div>
-    <scroll
+    <Scroll
       class="list"
       :style="scrollStyle"
       v-loading="loading"
@@ -23,25 +23,27 @@
       <div class="song-list-wrapper">
         <song-list :songs="songs" @select="selectItem" :rank="rank"></song-list>
       </div>
-    </scroll>
+    </Scroll>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Scroll from '@/components/wrap-scroll/index'
+import SongList from '@/components/base/song-list/song-list.vue'
+
+const RESERVED_HEIGHT = 40
 
 export default defineComponent({
   name: 'music-list',
   components: {
-    Scroll
+    Scroll,
+    SongList
   },
   props: {
     songs: {
       type: Array,
-      default: () => {
-        return []
-      }
+      default: () => []
     },
     title: String,
     pic: String,
@@ -50,26 +52,91 @@ export default defineComponent({
   },
   setup (props) {
     const router = useRouter()
+    const state = reactive({
+      scrollY: 0,
+      maxTranslateY: 0 // 最大偏移高度
+    })
+    const bgImage = ref<any>(null)
+    const imageHeight = ref(0)
 
-    const bgImageStyle = ref('')
-    const playBtnStyle = ref('')
-    const filterStyle = ref('')
-    const scrollStyle = ref('')
+    onMounted(() => {
+      imageHeight.value = bgImage.value.clientHeight
+      state.maxTranslateY = imageHeight.value - RESERVED_HEIGHT
+    })
+    // 滚动样式
+    const scrollStyle = computed(() => {
+      return {
+        top: `${imageHeight.value}px`,
+        bottom: '0px'
+      }
+    })
+    // 图片样式设置
+    const bgImageStyle = computed(() => {
+      const scrollY = state.scrollY
+      let paddingTop = '70%'
+      let height = '0'
+      // translateZ 值越大，图像离你越近，值越小，图像离你越远
+      let translateZ = 0
+      // 图片缩放
+      let scale = 1
+      let zIndex = 0
 
+      if (scrollY > state.maxTranslateY) {
+        paddingTop = '0'
+        // 当滚动高度大于最大偏移量时，固定图片高度为标题高度
+        height = `${RESERVED_HEIGHT}px`
+        translateZ = 1
+        zIndex = 10
+      }
+      // 下拉时，根据偏移量放大图片
+      if (scrollY < 0) {
+        scale = 1 + Math.abs(scrollY / imageHeight.value)
+      }
+      return {
+        paddingTop,
+        height,
+        zIndex,
+        backgroundImage: `url(${props.pic})`,
+        transform: `scale(${scale})translateZ(${translateZ}px)`
+      }
+    })
+    // 背景过滤器：毛玻璃模糊效果
+    const filterStyle = computed(() => {
+      const scrollY = state.scrollY
+      let blur = 0
+      // 当没达到最大偏移量时，使用偏移量计算，当达到或超过时，使用最大偏移量计算
+      if (scrollY >= 0) {
+        blur = Math.min(state.maxTranslateY / imageHeight.value, scrollY / imageHeight.value) * 20
+      }
+      return {
+        backdropFilter: `blur(${blur}px)`
+      }
+    })
+    // 播放按钮样式
+    const playBtnStyle = computed(() => {
+      let display = ''
+      if (state.scrollY >= state.maxTranslateY) {
+        display = 'none'
+      }
+      return {
+        display
+      }
+    })
+    // 返回
     const goBack = () => {
       router.back()
     }
-
+    // 随机播放
     const random = () => {
       console.log('随机播放')
     }
-
-    const onScroll = (pos) => {
-      console.log(pos)
+    // 滚动
+    const onScroll = (pos: { x: number, y: number }) => {
+      state.scrollY = -pos.y
     }
-
-    const selectItem = () => {
-      console.log('111')
+    // 点击播放歌曲
+    const selectItem = ({ song, index }: { song: any, index: number }) => {
+      console.log(song, index)
     }
     return {
       bgImageStyle,
@@ -79,7 +146,8 @@ export default defineComponent({
       goBack,
       random,
       onScroll,
-      selectItem
+      selectItem,
+      bgImage
     }
   }
 })

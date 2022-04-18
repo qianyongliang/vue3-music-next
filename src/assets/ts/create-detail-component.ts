@@ -1,4 +1,4 @@
-import MusicList from '@/components/music-list/music-list'
+import MusicList from '@/components/music-list/music-list.vue'
 import { computed, ref, toRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -47,6 +47,7 @@ const createDetailComponent = (name: string, key: string, fetch: any) => {
             path
           })
         }
+        // 调用接口
         fetch(data).then((res: any) => {
           songs.value = res.songs
           loading.value = false

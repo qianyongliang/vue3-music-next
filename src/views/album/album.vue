@@ -1,18 +1,22 @@
 <template>
   <div class="album">
-    <music-list></music-list>
+    <music-list
+      :title="title"
+      :pic="pic"
+      :songs="songs"
+    ></music-list>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import MusicList from '@/components/music-list/music-list.vue'
-export default defineComponent({
-  name: 'album',
-  components: {
-    MusicList
-  }
-})
+import createDetailComponent from '@/assets/ts/create-detail-component'
+import { ALBUM_KEY } from '@/assets/ts/constant'
+import { getAlbum } from '@/service/recommend'
+
+export default defineComponent(
+  createDetailComponent('album', ALBUM_KEY, getAlbum)
+)
 </script>
 <style lang="scss" scoped>
 .album {

@@ -29,6 +29,7 @@
 <script lang="ts">
 import { defineComponent, ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useActions } from '@/hooks/useVuexHooks'
 import Scroll from '@/components/wrap-scroll/index'
 import SongList from '@/components/base/song-list/song-list.vue'
 
@@ -134,9 +135,13 @@ export default defineComponent({
     const onScroll = (pos: { x: number, y: number }) => {
       state.scrollY = -pos.y
     }
+    const actions = useActions('', ['selectPlay'])
     // 点击播放歌曲
     const selectItem = ({ song, index }: { song: any, index: number }) => {
-      console.log(song, index)
+      actions.selectPlay({
+        list: props.songs,
+        index: index
+      })
     }
     return {
       bgImageStyle,

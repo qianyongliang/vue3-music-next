@@ -8,7 +8,9 @@ export default createStore({
     // 播放歌曲列表
     playlist: [],
     // 当前播放歌曲index
-    currentIndex: 0
+    currentIndex: 0,
+    // 播放状态
+    playing: false
   },
   getters: {
     currentSong: state => state.playlist[state.currentIndex] || {}
@@ -22,6 +24,9 @@ export default createStore({
     },
     [types.SETCURRENTINDEX] (state, index) {
       state.currentIndex = index
+    },
+    [types.SETPLAYINGSTATE] (state, playing) {
+      state.playing = playing
     }
   },
   actions: {
@@ -29,6 +34,7 @@ export default createStore({
       commit(types.SETFULLSCREEN, true)
       commit(types.SETPLAYLIST, list)
       commit(types.SETCURRENTINDEX, index)
+      commit(types.SETPLAYINGSTATE, true)
     }
   },
   modules: {

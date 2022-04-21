@@ -6,8 +6,8 @@ interface IPromise {
   }[]
 }
 
-export const getTopList = () => {
-  return new Promise<IPromise>((resolve, reject) => {
+export const getTopList = (): Promise<IPromise> => {
+  return new Promise((resolve, reject) => {
     get('/api/getTopList')
       .then((res) => {
         resolve(res)

@@ -17,7 +17,8 @@
     "@better-scroll/slide": "^2.2.1",
     "@better-scroll/observe-dom": "^2.2.1",
     "@better-scroll/pull-up": "^2.2.1",
-    "vue3-lazy": "^1.0.0-alpha.1"
+    "vue3-lazy": "^1.0.0-alpha.1",
+    "good-storage": "^1.1.1"
   },
   "devDependencies": {
     "@types/node": "^17.0.16",

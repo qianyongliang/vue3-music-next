@@ -33,8 +33,8 @@ const mergeSinger = (singer) => {
   return ret.join('/')
 }
 // 处理歌曲列表
-const handleSongList = async (list) => {
-  let songList = []
+const handleSongList = (list) => {
+  const songList = []
 
   list.forEach((item) => {
     const info = item.songInfo || item
@@ -59,101 +59,93 @@ const handleSongList = async (list) => {
 
     songList.push(song)
   })
-  // 处理歌曲播放url
-  try {
-    const songMap = songList.map(song => song.mid)
-    const processSongs = await registerSongsUrl(songMap)
-    songList = songList.map((song) => {
-      song.url = processSongs[song.mid]
-      return song
-    }).filter((song) => {
-      return song.url && song.url.indexOf('vkey') > -1
-    })
-  } catch {
-    console.log('error: 处理歌曲播放url错误')
-  }
 
   return songList
 }
 
+// 注册歌曲 url 获取接口路由
 // 因为歌曲的 url 每天都在变化，所以需要单独的接口根据歌曲的 mid 获取
-const registerSongsUrl = (list) => {
-  const mid = list
-  if (!mid.length) {
-    Promise.resolve(mid)
-  }
+const registerSongsUrl = (app) => {
+  app.get('/api/getSongsUrl', (req, res) => {
+    const mid = req.query.mid
 
-  let midGroup = []
-  // 第三方接口只支持最多处理 100 条数据，所以如果超过 100 条数据，我们要把数据按每组 100 条切割，发送多个请求
-  if (mid.length > 100) {
-    const groupLen = Math.ceil(mid.length / 100)
-    for (let i = 0; i < groupLen; i++) {
-      midGroup.push(mid.slice(i * 100, 100 * (i + 1)))
-    }
-  } else {
-    midGroup = [mid]
-  }
-
-  // 以歌曲的 mid 为 key，存储歌曲 URL
-  const urlMap = {}
-
-  // 处理返回的 mid
-  function process (mid) {
-    const data = {
-      req_0: {
-        module: 'vkey.GetVkeyServer',
-        method: 'CgiGetVkey',
-        param: {
-          guid: getUid(),
-          songmid: mid,
-          songtype: new Array(mid.length).fill(0),
-          uin: '0',
-          loginflag: 0,
-          platform: '23',
-          h5to: 'speed'
-        }
-      },
-      comm: {
-        g_tk: token,
-        uin: '0',
-        format: 'json',
-        platform: 'h5'
+    let midGroup = []
+    // 第三方接口只支持最多处理 100 条数据，所以如果超过 100 条数据，我们要把数据按每组 100 条切割，发送多个请求
+    if (mid.length > 100) {
+      const groupLen = Math.ceil(mid.length / 100)
+      for (let i = 0; i < groupLen; i++) {
+        midGroup.push(mid.slice(i * 100, 100 * (i + 1)))
       }
+    } else {
+      midGroup = [mid]
     }
 
-    const sign = getSecuritySign(JSON.stringify(data))
-    const url = `https://u.y.qq.com/cgi-bin/musics.fcg?_=${getRandomVal()}&sign=${sign}`
+    // 以歌曲的 mid 为 key，存储歌曲 URL
+    const urlMap = {}
 
-    // 发送 post 请求
-    return http
-      .request({
-        url,
-        data,
-        method: 'post'
-      })
-      .then((response) => {
-        const data = response.data
-        if (data.code === ERR_OK) {
-          const midInfo = data.req_0.data.midurlinfo
-          const sip = data.req_0.data.sip
-          const domain = sip[sip.length - 1]
-          midInfo.forEach((info) => {
-            // 获取歌曲的真实播放 URL
-            urlMap[info.songmid] = domain + info.purl
-          })
+    // 处理返回的 mid
+    const process = (mid) => {
+      const data = {
+        req_0: {
+          module: 'vkey.GetVkeyServer',
+          method: 'CgiGetVkey',
+          param: {
+            guid: getUid(),
+            songmid: mid,
+            songtype: new Array(mid.length).fill(0),
+            uin: '0',
+            loginflag: 0,
+            platform: '23',
+            h5to: 'speed'
+          }
+        },
+        comm: {
+          g_tk: token,
+          uin: '0',
+          format: 'json',
+          platform: 'h5'
+        }
+      }
+
+      const sign = getSecuritySign(JSON.stringify(data))
+      const url = `https://u.y.qq.com/cgi-bin/musics.fcg?_=${getRandomVal()}&sign=${sign}`
+
+      // 发送 post 请求
+      return http
+        .request({
+          url,
+          data,
+          method: 'post'
+        })
+        .then((response) => {
+          const data = response.data
+          if (data.code === ERR_OK) {
+            const midInfo = data.req_0.data.midurlinfo
+            const sip = data.req_0.data.sip
+            const domain = sip[sip.length - 1]
+            midInfo.forEach((info) => {
+              // 获取歌曲的真实播放 URL
+              urlMap[info.songmid] = domain + info.purl
+            })
+          }
+        })
+    }
+
+    // 构造多个 Promise 请求
+    const requests = midGroup.map((mid) => {
+      return process(mid)
+    })
+
+    // 并行发送多个请求
+    return Promise.all(requests).then(() => {
+      // 所有请求响应完毕，urlMap 也就构造完毕了
+      res.json({
+        code: ERR_OK,
+        result: {
+          map: urlMap
         }
       })
-  }
-
-  // 构造多个 Promise 请求
-  const requests = midGroup.map((mid) => {
-    return process(mid)
-  })
-
-  // 并行发送多个请求
-  return Promise.all(requests).then(() => {
-    // 所有请求响应完毕，urlMap 也就构造完毕了
-    return urlMap
+    })
   })
 }
 
@@ -164,6 +156,7 @@ function registerRouter (app) {
   registerSingerDetail(app)
   registerAlbum(app)
   registerTopList(app)
+  registerSongsUrl(app)
 }
 
 // 注册推荐列表接口路由
@@ -397,12 +390,12 @@ const registerSingerDetail = (app) => {
         },
         method: 'get'
       })
-      .then(async (_res) => {
+      .then((_res) => {
         const { data } = _res
         if (data.code === ERR_OK) {
           const list = data.singerSongList?.data?.songList || []
           // 歌单详情、榜单详情接口都有类似处理逻辑，固封装成函数
-          const songList = await handleSongList(list)
+          const songList = handleSongList(list)
 
           res.json({
             code: ERR_OK,
@@ -447,11 +440,11 @@ const registerAlbum = (app) => {
         data,
         method: 'post'
       })
-      .then(async (_res) => {
+      .then((_res) => {
         const { data } = _res
         if (data.code === ERR_OK) {
           const list = data.req_0.data?.songlist || []
-          const songList = await handleSongList(list)
+          const songList = handleSongList(list)
 
           res.json({
             code: ERR_OK,

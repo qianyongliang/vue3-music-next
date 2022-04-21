@@ -1,6 +1,7 @@
 import MusicList from '@/components/music-list/music-list.vue'
 import { computed, ref, toRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { processSongs } from '@/service/song'
 
 const createDetailComponent = (name: string, key: string, fetch: any) => {
   return {
@@ -37,8 +38,8 @@ const createDetailComponent = (name: string, key: string, fetch: any) => {
         return data?.name || data?.title
       })
       const loading = ref(true)
-      const songs = ref([])
-      const init = () => {
+      const songs = ref<any[]>([])
+      const init = async () => {
         const data = computedData.value
         if (!data) {
           // 没有id返回上一页
@@ -48,10 +49,9 @@ const createDetailComponent = (name: string, key: string, fetch: any) => {
           })
         }
         // 调用接口
-        fetch(data).then((res: any) => {
-          songs.value = res.songs
-          loading.value = false
-        })
+        const result = await fetch(data)
+        songs.value = await processSongs(result.songs)
+        loading.value = false
       }
       init()
       return {

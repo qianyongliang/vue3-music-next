@@ -55,9 +55,7 @@ interface State {
   sliders: {
     [key: string]: string
   }[]
-  albums: {
-    [key: string]: string
-  }[]
+  albums: Album[]
   loading: boolean
   selectedAlbum: Album
 }

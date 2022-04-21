@@ -11,23 +11,231 @@
         <h1 class="title">{{ currentSong.name }}</h1>
         <h2 class="subtitle">{{ currentSong.singer }}</h2>
       </div>
+      <div class="bottom">
+        <div class="dot-wrapper">
+          <span class="dot" :class="{ active: currentShow === 'cd' }"></span>
+          <span class="dot" :class="{ active: currentShow === 'lyric' }"></span>
+        </div>
+        <div class="progress-wrapper">
+          <span class="time time-l">{{ formatTime(currentTime) }}</span>
+          <div class="progress-bar-wrapper">
+            <progress-bar
+              ref="barRef"
+              :progress="progress"
+              @progress-changing="onProgressChanging"
+              @progress-changed="onProgressChanged"
+            ></progress-bar>
+          </div>
+          <span class="time time-r">{{
+            formatTime(currentSong.duration)
+          }}</span>
+        </div>
+        <div class="operators">
+          <div class="icon i-left">
+            <i @click="changeMode" :class="modeIcon"></i>
+          </div>
+          <div class="icon i-left" :class="disableCls">
+            <i @click="prev" class="icon-prev"></i>
+          </div>
+          <div class="icon i-center" :class="disableCls">
+            <i @click="togglePlay" :class="playIcon"></i>
+          </div>
+          <div class="icon i-right" :class="disableCls">
+            <i @click="next" class="icon-next"></i>
+          </div>
+          <div class="icon i-right">
+            <i
+              @click="toggleFavorite(currentSong)"
+              :class="getFavoriteIcon(currentSong)"
+            ></i>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <audio
+      ref="audioRef"
+      @pause="pause"
+      @canplay="ready"
+      @error="error"
+      @timeupdate="updateTime"
+    ></audio>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, computed } from 'vue'
+import { defineComponent, computed, ref, watch } from 'vue'
 import { useStore } from 'vuex'
+import { useState } from '@/hooks/useVuexHooks'
+import useMode from './use-mode'
+import useFavorite from './use-favorite'
+import * as types from '@/store/mutations-type'
+import { formatTime } from '@/assets/ts/util'
+
 export default defineComponent({
   name: 'player',
   setup () {
-    // vuex
+    // data
+    const audioRef = ref<any>(null)
+    const currentTime = ref<number>(0)
+    const songReady = ref(false) // 是否准备好播放
+
+    // vuex ----------------------------------------------------------
     const store = useStore()
-    const fullScreen = computed(() => store.state.fullScreen)
     const currentSong = computed(() => store.getters.currentSong)
+    const { fullScreen, playing, currentIndex, playlist } = useState('', [
+      'fullScreen',
+      'playing',
+      'currentIndex',
+      'playlist'
+    ])
+
+    // hooks
+    const { modeIcon, changeMode } = useMode()
+    const { getFavoriteIcon, toggleFavorite } = useFavorite()
+
+    // computed --------------------------------------------------------
+    // 设置播放按钮样式
+    const playIcon = computed(() => {
+      return playing.value ? 'icon-pause' : 'icon-play'
+    })
+    const disableCls = computed(() => {
+      return songReady.value ? '' : 'disable'
+    })
+
+    // watch  ----------------------------------------------------------
+    // 监听歌曲切换，使用对应url播放
+    watch(currentSong, (newSong) => {
+      if (!newSong.url || !newSong.id) {
+        return
+      }
+      // 切换歌曲重新计时
+      currentTime.value = 0
+      songReady.value = false
+      const audioEl = audioRef.value
+      audioEl.src = newSong.url
+      // 调用播放方法
+      audioEl.play()
+      store.commit(types.SET_PLAYING_STATE, true)
+    })
+    // 监听播放暂停
+    watch(playing, (newPlaying) => {
+      if (!songReady.value) {
+        return
+      }
+      const audioEl = audioRef.value
+      if (newPlaying) {
+        audioEl.play()
+      } else {
+        audioEl.pause()
+      }
+    })
+
+    // methds ---------------------------------------------------------
+    // 取消全屏
+    const goBack = () => {
+      store.commit(types.SET_FULL_SCREEN, false)
+    }
+    // 切换播放暂停状态
+    const togglePlay = () => {
+      if (!songReady.value) {
+        return
+      }
+      store.commit(types.SET_PLAYING_STATE, !playing.value)
+    }
+    // 在非交互情况下暂停播放，需处理，不然数据没暂停（歌词，进度条等），如合上电脑待机状态
+    const pause = () => {
+      store.commit(types.SET_PLAYING_STATE, false)
+    }
+    // 切换到上一首
+    const prev = () => {
+      const list = playlist.value
+      if (!songReady.value || !list.length) {
+        return
+      }
+      // 列表里只有一首歌
+      if (list?.length === 1) {
+        loop()
+      } else {
+        let index = currentIndex.value - 1
+        // 当前已是第一首，则切换到最后一首
+        if (index === -1) {
+          index = list.length - 1
+        }
+        store.commit(types.SET_CURRENT_INDEX, index)
+      }
+    }
+    // 切换到下一首
+    const next = () => {
+      const list = playlist.value
+      if (!songReady.value || !list.length) {
+        return
+      }
+      // 列表里只有一首歌
+      if (list?.length === 1) {
+        loop()
+      } else {
+        let index = currentIndex.value + 1
+        // 当前已是最后一首，则切换到第一首
+        if (index === list.length) {
+          index = 0
+        }
+        store.commit(types.SET_CURRENT_INDEX, index)
+      }
+    }
+    // 循环loop
+    const loop = () => {
+      const audioEl = audioRef.value
+      // 重头开始播放
+      audioEl.currentTime = 0
+      audioEl.play()
+      store.commit(types.SET_PLAYING_STATE, true)
+    }
+    // canplay：浏览器能够开始播放音频时触发
+    const ready = () => {
+      if (songReady.value) {
+        return
+      }
+      songReady.value = true
+    }
+    const error = () => {
+      songReady.value = true
+    }
+    // 音频currentTime改变时触发
+    const updateTime = (e: any) => {
+      currentTime.value = e.target.currentTime
+    }
 
     return {
+      // data
+      audioRef,
+      formatTime,
+      currentTime,
+
+      // vuex
       fullScreen,
-      currentSong
+      currentSong,
+
+      // hooks
+      // hoosk--mode
+      modeIcon,
+      changeMode,
+      // hoosk--favorite
+      getFavoriteIcon,
+      toggleFavorite,
+
+      // computed
+      playIcon,
+      disableCls,
+
+      // methds
+      goBack,
+      togglePlay,
+      pause,
+      prev,
+      next,
+      ready,
+      error,
+      updateTime
     }
   }
 })

@@ -7,8 +7,8 @@ interface IPromise {
 }
 
 // 推荐数据
-export const getRecommend = () => {
-  return new Promise<IPromise>((resolve, reject) => {
+export const getRecommend = (): Promise<IPromise> => {
+  return new Promise((resolve, reject) => {
     get('/api/getRecommend')
       .then((res) => {
         resolve(res)
@@ -20,8 +20,8 @@ export const getRecommend = () => {
 }
 
 // 歌单详情数据
-export const getAlbum = (album: { [key: string]: any }) => {
-  return new Promise<IPromise>((resolve, reject) => {
+export const getAlbum = (album: { [key: string]: any }): Promise<IPromise> => {
+  return new Promise((resolve, reject) => {
     get('/api/getAlbum', {
       id: album.id
     })

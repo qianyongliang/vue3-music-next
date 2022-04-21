@@ -7,8 +7,8 @@ interface IPromise {
 }
 
 // 歌手列表
-export const getSingerList = () :Promise<IPromise> => {
-  return new Promise<IPromise>((resolve, reject) => {
+export const getSingerList = (): Promise<IPromise> => {
+  return new Promise((resolve, reject) => {
     get('/api/getSingerList')
       .then((res) => {
         resolve(res)
@@ -20,8 +20,8 @@ export const getSingerList = () :Promise<IPromise> => {
 }
 
 // 歌手详情
-export const getSingerDetail = (singer: { [key: string]: any }) => {
-  return new Promise<IPromise>((resolve, reject) => {
+export const getSingerDetail = (singer: { [key: string]: any }): Promise<IPromise> => {
+  return new Promise((resolve, reject) => {
     get('/api/getSingerDetail', {
       mid: singer.mid
     })

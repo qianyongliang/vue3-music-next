@@ -17,17 +17,13 @@ import SingerList from '@/components/singer-list/singer-list.vue'
 import { getSingerList } from '@/service/singer'
 import { SINGER_KEY } from '@/assets/ts/constant'
 
-interface Singers {
+interface Singer {
   [key: string]: string
 }
 
 interface State {
-  singers: {
-    [key: string]: string
-  }[]
-  selectedSinger: {
-    [key: string]: string
-  }
+  singers: Singer[]
+  selectedSinger: Singer
 }
 
 export default defineComponent({
@@ -50,7 +46,7 @@ export default defineComponent({
     }
     getSingerListRes()
 
-    const selectSinger = (singer: Singers) => {
+    const selectSinger = (singer: Singer) => {
       state.selectedSinger = singer
       cacheAlbum(singer)
       router.push({
@@ -59,7 +55,7 @@ export default defineComponent({
     }
 
     // 缓存点击的歌手
-    const cacheAlbum = (singer: Singers) => {
+    const cacheAlbum = (singer: Singer) => {
       sessionStorage.setItem(SINGER_KEY, JSON.stringify(singer))
     }
 

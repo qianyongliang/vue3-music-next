@@ -59,6 +59,10 @@ export default defineComponent({
     })
     const bgImage = ref<any>(null)
     const imageHeight = ref(0)
+    const { selectPlay, randomPlay } = useActions('', [
+      'selectPlay',
+      'randomPlay'
+    ])
 
     onMounted(() => {
       imageHeight.value = bgImage.value.clientHeight
@@ -107,7 +111,11 @@ export default defineComponent({
       let blur = 0
       // 当没达到最大偏移量时，使用偏移量计算，当达到或超过时，使用最大偏移量计算
       if (scrollY >= 0) {
-        blur = Math.min(state.maxTranslateY / imageHeight.value, scrollY / imageHeight.value) * 20
+        blur =
+          Math.min(
+            state.maxTranslateY / imageHeight.value,
+            scrollY / imageHeight.value
+          ) * 20
       }
       return {
         backdropFilter: `blur(${blur}px)`
@@ -129,16 +137,15 @@ export default defineComponent({
     }
     // 随机播放
     const random = () => {
-      console.log('随机播放')
+      randomPlay(props.songs)
     }
     // 滚动
-    const onScroll = (pos: { x: number, y: number }) => {
+    const onScroll = (pos: { x: number; y: number }) => {
       state.scrollY = -pos.y
     }
-    const actions = useActions('', ['selectPlay'])
     // 点击播放歌曲
-    const selectItem = ({ song, index }: { song: any, index: number }) => {
-      actions.selectPlay({
+    const selectItem = ({ index }: { index: number }) => {
+      selectPlay({
         list: props.songs,
         index: index
       })

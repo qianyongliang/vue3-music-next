@@ -59,6 +59,7 @@
       @canplay="ready"
       @error="error"
       @timeupdate="updateTime"
+      @ended="end"
     ></audio>
   </div>
 </template>
@@ -68,38 +69,49 @@ import { useStore } from 'vuex'
 import { useState } from '@/hooks/useVuexHooks'
 import useMode from './use-mode'
 import useFavorite from './use-favorite'
+import useMiddleInteractive from './use-middle-interactive'
 import * as types from '@/store/mutations-type'
 import { formatTime } from '@/assets/ts/util'
+import ProgressBar from './progress-bar.vue'
+import { PLAY_MODE } from '@/assets/ts/constant'
 
 export default defineComponent({
   name: 'player',
+  components: {
+    ProgressBar
+  },
   setup () {
     // data
     const audioRef = ref<any>(null)
     const currentTime = ref<number>(0)
     const songReady = ref(false) // 是否准备好播放
+    const progressChanging = ref<boolean>(false) // 是否在拖动进度条中
 
     // vuex ----------------------------------------------------------
     const store = useStore()
     const currentSong = computed(() => store.getters.currentSong)
-    const { fullScreen, playing, currentIndex, playlist } = useState('', [
-      'fullScreen',
-      'playing',
-      'currentIndex',
-      'playlist'
-    ])
+    const { fullScreen, playing, currentIndex, playlist, playMode } = useState(
+      '',
+      ['fullScreen', 'playing', 'currentIndex', 'playlist', 'playMode']
+    )
 
     // hooks
     const { modeIcon, changeMode } = useMode()
     const { getFavoriteIcon, toggleFavorite } = useFavorite()
+    const { currentShow } = useMiddleInteractive()
 
     // computed --------------------------------------------------------
     // 设置播放按钮样式
     const playIcon = computed(() => {
       return playing.value ? 'icon-pause' : 'icon-play'
     })
+    // 播放未准备样式
     const disableCls = computed(() => {
       return songReady.value ? '' : 'disable'
+    })
+    // 播放时间占总时长比
+    const progress = computed(() => {
+      return currentTime.value / currentSong.value.duration || 0
     })
 
     // watch  ----------------------------------------------------------
@@ -202,7 +214,34 @@ export default defineComponent({
     }
     // 音频currentTime改变时触发
     const updateTime = (e: any) => {
-      currentTime.value = e.target.currentTime
+      // 如果在拖动进度条，就不改变当前播放时间，拖动优先
+      if (!progressChanging.value) {
+        currentTime.value = e.target.currentTime
+      }
+    }
+    // 拖动进度条中
+    const onProgressChanging = (progress: number) => {
+      progressChanging.value = true
+      currentTime.value = currentSong.value.duration * progress
+    }
+    // 拖动进度条结束
+    const onProgressChanged = (progress: number) => {
+      progressChanging.value = false
+      audioRef.value.currentTime = currentTime.value =
+        currentSong.value.duration * progress
+      if (!playing.value) {
+        store.commit(types.SET_PLAYING_STATE, true)
+      }
+    }
+    // 播放结束
+    const end = () => {
+      // 一首歌曲播放结束后，根据当前播放模式，播放下一首
+      currentTime.value = 0
+      if (playMode.value === PLAY_MODE.loop) {
+        loop()
+      } else {
+        next()
+      }
     }
 
     return {
@@ -215,17 +254,10 @@ export default defineComponent({
       fullScreen,
       currentSong,
 
-      // hooks
-      // hoosk--mode
-      modeIcon,
-      changeMode,
-      // hoosk--favorite
-      getFavoriteIcon,
-      toggleFavorite,
-
       // computed
       playIcon,
       disableCls,
+      progress,
 
       // methds
       goBack,
@@ -235,7 +267,19 @@ export default defineComponent({
       next,
       ready,
       error,
-      updateTime
+      updateTime,
+      onProgressChanging,
+      onProgressChanged,
+      end,
+      // hooks -----------------
+      // mode
+      modeIcon,
+      changeMode,
+      // favorite
+      getFavoriteIcon,
+      toggleFavorite,
+      // use-middle-interactive
+      currentShow
     }
   }
 })

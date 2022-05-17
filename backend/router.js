@@ -2,6 +2,7 @@
 const getSecuritySign = require('./sign.js')
 const http = require('./axios.js')
 const pinyin = require('pinyin')
+const Base64 = require('js-base64').Base64
 
 const ERR_OK = 0
 const token = 5381
@@ -154,6 +155,7 @@ function registerRouter (app) {
   registerRecommend(app)
   registerSingerList(app)
   registerSingerDetail(app)
+  registerLyric(app)
   registerAlbum(app)
   registerTopList(app)
   registerSongsUrl(app)
@@ -409,6 +411,40 @@ const registerSingerDetail = (app) => {
       })
   })
 }
+
+// 注册歌词接口
+const registerLyric = (app) => {
+  app.get('/api/getLyric', (req, res) => {
+    const url = 'https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg'
+
+    http
+      .request({
+        url,
+        params: {
+          pcachetime: +new Date(),
+          '-': 'MusicJsonCallback_lrc',
+          songmid: req.query.mid,
+          g_tk_new_20200303: token
+        },
+        method: 'get'
+      })
+      .then((_res) => {
+        const { data } = _res
+        console.log(_res, '------')
+        if (data.code === ERR_OK) {
+          res.json({
+            code: ERR_OK,
+            result: {
+              lyric: Base64.decode(data.lyric)
+            }
+          })
+        } else {
+          res.json(data)
+        }
+      })
+  })
+}
+
 // 注册歌单专辑接口
 const registerAlbum = (app) => {
   app.get('/api/getAlbum', (req, res) => {

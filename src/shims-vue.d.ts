@@ -13,3 +13,4 @@ declare module '*.vue' {
  * 同时又不会触发 implicit any 报错。这个操作被文档叫做 Shorthand ambient modules，意为「快速引入环境包」：
  */
 declare module 'good-storage'
+declare module 'lyric-parser'

@@ -1,9 +1,10 @@
 <template>
-  <div class="player">
+  <div class="player" v-show="playlist.length">
     <div class="normal-player" v-show="fullScreen">
       <div class="background">
         <img :src="currentSong.pic" />
       </div>
+      <!-- 歌曲名 -->
       <div class="top">
         <div class="back" @click="goBack">
           <i class="icon-back"></i>
@@ -11,11 +12,53 @@
         <h1 class="title">{{ currentSong.name }}</h1>
         <h2 class="subtitle">{{ currentSong.singer }}</h2>
       </div>
+      <!-- cd旋转、歌词 -->
+      <div
+        class="middle"
+        @touchstart.prevent="onMiddleTouchStart"
+        @touchmove.prevent="onMiddleTouchMove"
+        @touchend.prevent="onMiddleTouchEnd"
+      >
+        <div class="middle-l" :style="middleLStyle">
+          <div ref="cdWrapperRef" class="cd-wrapper">
+            <div ref="cdRef" class="cd">
+              <img
+                ref="cdImageRef"
+                class="image"
+                :class="cdCls"
+                :src="currentSong.pic"
+              />
+            </div>
+          </div>
+          <div class="playing-lyric-wrapper">
+            <div class="playing-lyric">{{ playingLyric }}</div>
+          </div>
+        </div>
+        <scroll class="middle-r" ref="lyricScrollRef" :style="middleRStyle">
+          <div class="lyric-wrapper">
+            <div v-if="currentLyric" ref="lyricListRef">
+              <p
+                class="text"
+                :class="{ current: currentLineNum === index }"
+                v-for="(line, index) in currentLyric.lines"
+                :key="line.num"
+              >
+                {{ line.txt }}
+              </p>
+            </div>
+            <div class="pure-music" v-show="pureMusicLyric">
+              <p>{{ pureMusicLyric }}</p>
+            </div>
+          </div>
+        </scroll>
+      </div>
+      <!-- 播放块按钮、进度条相关 -->
       <div class="bottom">
         <div class="dot-wrapper">
           <span class="dot" :class="{ active: currentShow === 'cd' }"></span>
           <span class="dot" :class="{ active: currentShow === 'lyric' }"></span>
         </div>
+        <!-- 进度条 -->
         <div class="progress-wrapper">
           <span class="time time-l">{{ formatTime(currentTime) }}</span>
           <div class="progress-bar-wrapper">
@@ -30,6 +73,7 @@
             formatTime(currentSong.duration)
           }}</span>
         </div>
+        <!-- 播放按钮 -->
         <div class="operators">
           <div class="icon i-left">
             <i @click="changeMode" :class="modeIcon"></i>
@@ -67,24 +111,28 @@
 import { defineComponent, computed, ref, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useState } from '@/hooks/useVuexHooks'
+import * as types from '@/store/mutations-type'
+import { formatTime } from '@/assets/ts/util'
+import { PLAY_MODE } from '@/assets/ts/constant'
 import useMode from './use-mode'
 import useFavorite from './use-favorite'
 import useMiddleInteractive from './use-middle-interactive'
-import * as types from '@/store/mutations-type'
-import { formatTime } from '@/assets/ts/util'
+import useCd from './use-cd'
+import useLyric from './use-lyric'
 import ProgressBar from './progress-bar.vue'
-import { PLAY_MODE } from '@/assets/ts/constant'
+import Scroll from '@/components/base/scroll/scroll.vue'
 
 export default defineComponent({
   name: 'player',
   components: {
-    ProgressBar
+    ProgressBar,
+    Scroll
   },
   setup () {
     // data
     const audioRef = ref<any>(null)
     const currentTime = ref<number>(0)
-    const songReady = ref(false) // 是否准备好播放
+    const songReady = ref<boolean>(false) // 是否准备好播放
     const progressChanging = ref<boolean>(false) // 是否在拖动进度条中
 
     // vuex ----------------------------------------------------------
@@ -98,7 +146,28 @@ export default defineComponent({
     // hooks
     const { modeIcon, changeMode } = useMode()
     const { getFavoriteIcon, toggleFavorite } = useFavorite()
-    const { currentShow } = useMiddleInteractive()
+    const { cdCls, cdRef, cdImageRef } = useCd()
+    const {
+      currentLyric,
+      currentLineNum,
+      lyricScrollRef,
+      lyricListRef,
+      pureMusicLyric,
+      playLyric,
+      playingLyric,
+      stopLyric
+    } = useLyric({
+      songReady,
+      currentTime
+    })
+    const {
+      currentShow,
+      middleLStyle,
+      middleRStyle,
+      onMiddleTouchStart,
+      onMiddleTouchMove,
+      onMiddleTouchEnd
+    } = useMiddleInteractive()
 
     // computed --------------------------------------------------------
     // 设置播放按钮样式
@@ -137,8 +206,10 @@ export default defineComponent({
       const audioEl = audioRef.value
       if (newPlaying) {
         audioEl.play()
+        playLyric()
       } else {
         audioEl.pause()
+        stopLyric()
       }
     })
 
@@ -208,6 +279,7 @@ export default defineComponent({
         return
       }
       songReady.value = true
+      playLyric()
     }
     const error = () => {
       songReady.value = true
@@ -223,6 +295,9 @@ export default defineComponent({
     const onProgressChanging = (progress: number) => {
       progressChanging.value = true
       currentTime.value = currentSong.value.duration * progress
+      // 拖动进度条的时候先同步歌词进度，再暂停播放歌词
+      playLyric()
+      stopLyric()
     }
     // 拖动进度条结束
     const onProgressChanged = (progress: number) => {
@@ -232,6 +307,8 @@ export default defineComponent({
       if (!playing.value) {
         store.commit(types.SET_PLAYING_STATE, true)
       }
+      // 拖动结束后再同步一次，并播放
+      playLyric()
     }
     // 播放结束
     const end = () => {
@@ -249,6 +326,7 @@ export default defineComponent({
       audioRef,
       formatTime,
       currentTime,
+      playlist,
 
       // vuex
       fullScreen,
@@ -278,8 +356,24 @@ export default defineComponent({
       // favorite
       getFavoriteIcon,
       toggleFavorite,
+      // cd
+      cdCls,
+      cdRef,
+      cdImageRef,
+      // lyric
+      currentLyric,
+      currentLineNum,
+      lyricScrollRef,
+      lyricListRef,
+      pureMusicLyric,
+      playingLyric,
       // use-middle-interactive
-      currentShow
+      currentShow,
+      middleLStyle,
+      middleRStyle,
+      onMiddleTouchStart,
+      onMiddleTouchMove,
+      onMiddleTouchEnd
     }
   }
 })

@@ -8,7 +8,7 @@ const baseURL =
 
 axios.defaults.baseURL = baseURL
 
-export const get = (url: string, params?: any) => {
+export const get = (url: string, params?: { [key: string]: any }): Promise<any> => {
   return axios
     .get(url, {
       params

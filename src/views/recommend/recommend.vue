@@ -48,13 +48,13 @@ import Scroll from '@/components/base/scroll/scroll.vue'
 import { ALBUM_KEY } from '@/assets/ts/constant'
 
 interface Album {
-  [key: string]: string
+  [key: string]: any
 }
 
 interface State {
   sliders: {
-    [key: string]: string
-  }[]
+    [key: string]: any
+  }
   albums: Album[]
   loading: boolean
   selectedAlbum: Album
@@ -70,7 +70,7 @@ export default defineComponent({
     const router = useRouter()
     const state = reactive({
       sliders: [],
-      albums: [],
+      albums!: [],
       loading: computed((): boolean => {
         return !state.sliders.length && !state.albums.length
       }),

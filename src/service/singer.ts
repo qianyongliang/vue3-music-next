@@ -1,13 +1,15 @@
 import { get } from './base'
+import { Song } from './interface'
 
-interface IPromise {
-  [key: string]: {
-    [key: string]: any
+interface Singers {
+  singers: {
+    list: Song[],
+    title: string
   }[]
 }
 
 // 歌手列表
-export const getSingerList = (): Promise<IPromise> => {
+export const getSingerList = (): Promise<Singers> => {
   return new Promise((resolve, reject) => {
     get('/api/getSingerList')
       .then((res) => {
@@ -20,7 +22,7 @@ export const getSingerList = (): Promise<IPromise> => {
 }
 
 // 歌手详情
-export const getSingerDetail = (singer: { [key: string]: any }): Promise<IPromise> => {
+export const getSingerDetail = (singer: Song): Promise<Singers> => {
   return new Promise((resolve, reject) => {
     get('/api/getSingerDetail', {
       mid: singer.mid

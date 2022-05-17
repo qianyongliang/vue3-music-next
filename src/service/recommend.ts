@@ -1,13 +1,16 @@
 import { get } from './base'
+import { Album, Sliders, Song } from './interface'
+interface Recommend {
+  albums: Album[],
+  sliders: Sliders[]
+}
 
-interface IPromise {
-  [key: string]: {
-    [key: string]: any
-  }[]
+interface AlbumDetail {
+  songs: Song[]
 }
 
 // 推荐数据
-export const getRecommend = (): Promise<IPromise> => {
+export const getRecommend = (): Promise<Recommend> => {
   return new Promise((resolve, reject) => {
     get('/api/getRecommend')
       .then((res) => {
@@ -20,7 +23,7 @@ export const getRecommend = (): Promise<IPromise> => {
 }
 
 // 歌单详情数据
-export const getAlbum = (album: { [key: string]: any }): Promise<IPromise> => {
+export const getAlbum = (album: Album): Promise<AlbumDetail> => {
   return new Promise((resolve, reject) => {
     get('/api/getAlbum', {
       id: album.id

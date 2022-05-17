@@ -2,8 +2,20 @@ import { createStore } from 'vuex'
 import * as types from './mutations-type'
 import { PLAY_MODE } from '@/assets/ts/constant'
 import { shuffle } from '@/assets/ts/util'
+import { Song } from '@/service/interface'
+
+interface State {
+  fullScreen: boolean,
+  playlist: Song[],
+  currentIndex: number,
+  playing: boolean,
+  playMode: number,
+  sequenceList: Song[],
+  favoriteList: Song[]
+}
+
 export default createStore({
-  state: {
+  state: <State> {
     // 播放器页面是否全屏
     fullScreen: false,
     // 当前播放歌曲列表
@@ -44,6 +56,14 @@ export default createStore({
     },
     [types.SET_FAVORITE_LIST] (state, favoriteList) {
       state.favoriteList = favoriteList
+    },
+    [types.SET_SONG_LYRIC] (state, { song, lyric }) {
+      state.sequenceList.map((item) => {
+        if (item.mid === song.mid) {
+          item.lyric = lyric
+        }
+        return item
+      })
     }
   },
   actions: {

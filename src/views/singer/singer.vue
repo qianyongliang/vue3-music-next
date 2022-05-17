@@ -18,7 +18,7 @@ import { getSingerList } from '@/service/singer'
 import { SINGER_KEY } from '@/assets/ts/constant'
 
 interface Singer {
-  [key: string]: string
+  [key: string]: any
 }
 
 interface State {

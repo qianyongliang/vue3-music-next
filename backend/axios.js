@@ -22,7 +22,11 @@ const TIME_OUT = 3 * 1000
 const BASE_URL = ''
 
 class HttpRequest {
-  constructor () {}
+  constructor (baseURL = BASE_URL) {
+    this.baseURL = baseURL
+    this.queue = {} // 队列中有请求时 显示loadong界面, 反之同理
+  }
+
   getInsideConfig (options) {
     let config = {
       timeout: TIME_OUT,
@@ -32,27 +36,33 @@ class HttpRequest {
       }
     }
     if (options.method && GET_METHOD.includes(options.method)) {
-      config = {
-        ...config,
-        params: Object.assign({}, commonParams, options.params)
-      }
+      config = Object.assign(config, options)
+      config.params = Object.assign({}, commonParams, config.params)
+      return config
     } else if (options.method && POST_METHOD.includes(options.method)) {
       config = {
+        ...config,
         headers: {
           ...config.headers,
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }
+      return Object.assign(config, options)
     }
-    return Object.assign(config, options)
   }
 
   interceptors (instance, url) {
     // 请求拦截
     instance.interceptors.request.use(
       (config) => {
-        // 添加全局的loading..
         // 请求头携带token
+        // 添加全局的loading...
+        // Spin.show() ---遮罩组件
+        // 队列中有请求时 显示loadong界面, 反之同理
+        if (!Object.keys(this.queue).length) {
+          // Spin.show()
+        }
+        this.queue[url] = true
         return config
       },
       (error) => {
@@ -62,11 +72,13 @@ class HttpRequest {
     // 响应拦截
     instance.interceptors.response.use(
       (response) => {
+        delete this.queue[url]
         const { data } = response
         // console.log('返回数据处理', response)
         return response
       },
       (error) => {
+        delete this.queue[url]
         console.log('error==>', error)
         return Promise.reject(error)
       }
@@ -75,6 +87,7 @@ class HttpRequest {
 
   request (options) {
     const instance = axios.create()
+    options = this.getInsideConfig(options)
     this.interceptors(instance, options.url)
     return instance(options)
   }

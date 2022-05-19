@@ -2,13 +2,17 @@ import MusicList from '@/components/music-list/music-list.vue'
 import { computed, ref, toRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { processSongs } from '@/service/song'
+import storage from 'good-storage'
 
 const createDetailComponent = (name: string, key: string, fetch: any) => {
   return {
     name,
     components: { MusicList },
     props: {
-      data: Object
+      data: {
+        type: Object,
+        default: {}
+      }
     },
     setup (props: any) {
       const route = useRoute()
@@ -20,7 +24,7 @@ const createDetailComponent = (name: string, key: string, fetch: any) => {
         if (Object.keys(data).length) {
           ret = data
         } else {
-          const cached = JSON.parse(sessionStorage.getItem(key) || '')
+          const cached = storage.session.get(key)
           if ((cached?.mid || cached?.id + '') === route.params.id) {
             ret = cached
           }

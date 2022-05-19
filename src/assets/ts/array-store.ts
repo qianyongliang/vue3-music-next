@@ -7,6 +7,7 @@ interface Compare {
   (key: any): boolean
 }
 
+// 缓存到 location 中
 const inertArray = (arr: Arr, val: any, compare: Compare, maxLen: number) => {
   const index = arr.findIndex(compare)
   if (index === 0) {
@@ -53,4 +54,9 @@ export const clear = (key: string) => {
 
 export const saveAll = (items: any, key: string) => {
   storage.set(key, items)
+}
+
+// 缓存到session中
+export const cache = (name: string, val: any) => {
+  storage.session.set(name, val)
 }

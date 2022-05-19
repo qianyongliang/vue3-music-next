@@ -22,15 +22,12 @@
 <script lang="ts">
 import { defineComponent, PropType, ref } from 'vue'
 import { useSlider } from './use-slider'
-
-interface Slider {
-  [key: string]: string
-}
+import { Sliders } from '@/service/interface'
 export default defineComponent({
   name: 'slider',
   props: {
     sliders: {
-      type: Array as PropType<Array<Slider>>,
+      type: Array as PropType<Sliders[]>,
       default: () => {
         return []
       }

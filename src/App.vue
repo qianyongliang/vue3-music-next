@@ -6,7 +6,7 @@
   <router-view />
   <player></player>
 </template>
-<script>
+<script lang="ts">
 import { defineComponent } from 'vue'
 import Header from '@/components/header/header.vue'
 import Tab from '@/components/tab/tab.vue'

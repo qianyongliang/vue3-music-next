@@ -12,6 +12,8 @@ const SingerDetail = () =>
 // 排行
 const TopList = () =>
   import(/* webpackChunkName: "top-list" */ '../views/topList/top-list.vue')
+const TopDetail = () =>
+  import(/* webpackChunkName: "top-list" */ '../views/topList/top-detail.vue')
 // 搜索
 const Search = () =>
   import(/* webpackChunkName: "search" */ '../views/search/search.vue')
@@ -54,7 +56,13 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/top-list',
     name: 'TopList',
-    component: TopList
+    component: TopList,
+    children: [
+      {
+        path: ':id',
+        component: TopDetail
+      }
+    ]
   },
   {
     path: '/search',

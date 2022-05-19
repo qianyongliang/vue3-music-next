@@ -31,7 +31,7 @@
         </div>
       </div>
     </Scroll>
-    <!-- outer-view 的 slot 固定写法， 主要使用 <transition> 和 <keep-alive> 组件来包裹你的路由组件。-->
+    <!-- router-view 的 slot 固定写法， 主要使用 <transition> 和 <keep-alive> 组件来包裹你的路由组件。-->
     <router-view v-slot="{ Component }">
       <transition appear name="slide">
         <component :is="Component" :data="selectedAlbum"></component>
@@ -43,18 +43,18 @@
 import { defineComponent, reactive, toRefs, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getRecommend } from '@/service/recommend'
+import { ALBUM_KEY } from '@/assets/ts/constant'
+import { cache } from '@/assets/ts/array-store'
+import { Sliders } from '@/service/interface'
 import Slider from '@/components/base/slider/slider.vue'
 import Scroll from '@/components/base/scroll/scroll.vue'
-import { ALBUM_KEY } from '@/assets/ts/constant'
 
 interface Album {
   [key: string]: any
 }
 
 interface State {
-  sliders: {
-    [key: string]: any
-  }
+  sliders: Sliders[]
   albums: Album[]
   loading: boolean
   selectedAlbum: Album
@@ -70,7 +70,7 @@ export default defineComponent({
     const router = useRouter()
     const state = reactive({
       sliders: [],
-      albums!: [],
+      albums: [],
       loading: computed((): boolean => {
         return !state.sliders.length && !state.albums.length
       }),
@@ -89,15 +89,11 @@ export default defineComponent({
     // 点击歌单
     const selectItem = (album: Album) => {
       state.selectedAlbum = album
-      cacheAlbum(album)
+      // 缓存点击的歌单
+      cache(ALBUM_KEY, album)
       router.push({
         path: `/recommend/${album.id}`
       })
-    }
-
-    // 缓存点击的歌单
-    const cacheAlbum = (album: Album) => {
-      sessionStorage.setItem(ALBUM_KEY, JSON.stringify(album))
     }
 
     return {

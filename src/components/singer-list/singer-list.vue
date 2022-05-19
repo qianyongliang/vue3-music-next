@@ -47,23 +47,23 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, reactive, toRefs } from 'vue'
+import { defineComponent, PropType } from 'vue'
 import Scroll from '@/components/wrap-scroll/index'
 import userFixed from './use-fixed'
 import useShortcut from './use-shortcut'
+import { Song } from '@/service/interface'
 
-interface Data {
+interface Singers {
+  list: Song[]
   title: string
-  list: {
-    [key: string]: string | number
-  }[]
 }
+
 export default defineComponent({
   name: 'singer-list',
   components: { Scroll },
   props: {
     data: {
-      type: Array as PropType<Array<Data>>,
+      type: Array as PropType<Singers[]>,
       default: () => {
         return []
       }

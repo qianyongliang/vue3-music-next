@@ -1,5 +1,5 @@
 <template>
-  <div class="singer">
+  <div class="singer" v-loading="!singers.length">
     <singer-list :data="singers" @select="selectSinger"></singer-list>
 
     <!-- router-view 的 slot 固定写法， 主要使用 <transition> 和 <keep-alive> 组件来包裹你的路由组件。-->
@@ -13,17 +13,19 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
 import { useRouter } from 'vue-router'
-import SingerList from '@/components/singer-list/singer-list.vue'
 import { getSingerList } from '@/service/singer'
 import { SINGER_KEY } from '@/assets/ts/constant'
+import { cache } from '@/assets/ts/array-store'
+import { Singer } from '@/service/interface'
+import SingerList from '@/components/singer-list/singer-list.vue'
 
-interface Singer {
+interface SingerItem {
   [key: string]: any
 }
 
 interface State {
-  singers: Singer[]
-  selectedSinger: Singer
+  singers: SingerItem[]
+  selectedSinger: SingerItem
 }
 
 export default defineComponent({
@@ -32,6 +34,7 @@ export default defineComponent({
     SingerList
   },
   setup () {
+    debugger
     const router = useRouter()
     const state = reactive({
       singers: [],
@@ -48,15 +51,11 @@ export default defineComponent({
 
     const selectSinger = (singer: Singer) => {
       state.selectedSinger = singer
-      cacheAlbum(singer)
+      // 缓存点击的歌手
+      cache(SINGER_KEY, singer)
       router.push({
         path: `/singer/${singer.mid}`
       })
-    }
-
-    // 缓存点击的歌手
-    const cacheAlbum = (singer: Singer) => {
-      sessionStorage.setItem(SINGER_KEY, JSON.stringify(singer))
     }
 
     return {

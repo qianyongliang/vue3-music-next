@@ -27,9 +27,10 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, reactive, computed, onMounted } from 'vue'
+import { defineComponent, ref, PropType, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useActions } from '@/hooks/useVuexHooks'
+import { Song } from '@/service/interface'
 import Scroll from '@/components/wrap-scroll/index'
 import SongList from '@/components/base/song-list/song-list.vue'
 
@@ -43,7 +44,7 @@ export default defineComponent({
   },
   props: {
     songs: {
-      type: Array,
+      type: Array as PropType<Song[]>,
       default: () => []
     },
     title: String,

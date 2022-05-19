@@ -1,17 +1,19 @@
 import { createStore } from 'vuex'
 import * as types from './mutations-type'
-import { PLAY_MODE } from '@/assets/ts/constant'
+import { PLAY_MODE, SEARCH_KEY } from '@/assets/ts/constant'
 import { shuffle } from '@/assets/ts/util'
 import { Song } from '@/service/interface'
+import { load } from '@/assets/ts/array-store'
 
 interface State {
-  fullScreen: boolean,
-  playlist: Song[],
-  currentIndex: number,
-  playing: boolean,
-  playMode: number,
-  sequenceList: Song[],
-  favoriteList: Song[]
+  fullScreen: boolean;
+  playlist: Song[];
+  currentIndex: number;
+  playing: boolean;
+  playMode: number;
+  sequenceList: Song[];
+  favoriteList: Song[];
+
 }
 
 export default createStore({
@@ -29,7 +31,9 @@ export default createStore({
     // 顺序播放列表，记录原始播放顺序，避免在随机播放后打乱原来播放列表
     sequenceList: [],
     // 收藏列表
-    favoriteList: []
+    favoriteList: [],
+    // 搜索历史
+    searchHistory: load(SEARCH_KEY)
   },
   getters: {
     // 当前播放歌曲

@@ -54,8 +54,8 @@ import useShortcut from './use-shortcut'
 import { Song } from '@/service/interface'
 
 interface Singers {
-  list: Song[]
-  title: string
+  list: Song[];
+  title: string;
 }
 
 export default defineComponent({

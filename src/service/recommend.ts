@@ -1,12 +1,12 @@
 import { get } from './base'
 import { Album, Sliders, Song } from './interface'
 interface Recommend {
-  albums: Album[],
-  sliders: Sliders[]
+  albums: Album[];
+  sliders: Sliders[];
 }
 
 interface AlbumDetail {
-  songs: Song[]
+  songs: Song[];
 }
 
 // 推荐数据

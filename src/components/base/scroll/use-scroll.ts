@@ -5,8 +5,8 @@ import { onMounted, onUnmounted, onActivated, onDeactivated, ref } from 'vue'
 BScroll.use(ObserveDOM)
 
 interface Options {
-  click: boolean
-  probeType: number
+  click: boolean;
+  probeType: number;
 }
 export const useScroll = (
   wrapperRef: any,

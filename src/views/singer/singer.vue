@@ -24,8 +24,8 @@ interface SingerItem {
 }
 
 interface State {
-  singers: SingerItem[]
-  selectedSinger: SingerItem
+  singers: SingerItem[];
+  selectedSinger: SingerItem;
 }
 
 export default defineComponent({

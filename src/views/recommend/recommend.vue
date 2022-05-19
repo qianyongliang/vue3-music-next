@@ -54,10 +54,10 @@ interface Album {
 }
 
 interface State {
-  sliders: Sliders[]
-  albums: Album[]
-  loading: boolean
-  selectedAlbum: Album
+  sliders: Sliders[];
+  albums: Album[];
+  loading: boolean;
+  selectedAlbum: Album;
 }
 
 export default defineComponent({

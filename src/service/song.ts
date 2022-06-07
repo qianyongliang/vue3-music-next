@@ -1,7 +1,7 @@
 import { get } from './base'
 import { Song } from './interface'
 
-// 处理歌曲播url数据
+// 处理歌曲播放url数据
 export const processSongs = (songs: Song[]): Promise<Song[]> => {
   return new Promise((resolve) => {
     if (!songs.length) {

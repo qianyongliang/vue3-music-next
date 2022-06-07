@@ -674,13 +674,10 @@ const registerSearch = (app) => {
       platform: 'h5',
       format: 'json'
     }
-
     http
       .request({
         url,
-        params: {
-          data
-        },
+        params: data,
         method: 'get'
       })
       .then((_res) => {
@@ -689,7 +686,6 @@ const registerSearch = (app) => {
           const songList = []
           const songData = data.data.song
           const list = songData.list
-
           list.forEach((item) => {
             const info = item
             if (info.pay.payplay !== 0 || !info.interval) {
@@ -723,7 +719,6 @@ const registerSearch = (app) => {
 
           const { curnum, curpage, totalnum } = songData
           const hasMore = 20 * (curpage - 1) + curnum < totalnum
-
           res.json({
             code: ERR_OK,
             result: {

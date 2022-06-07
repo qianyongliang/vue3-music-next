@@ -21,7 +21,7 @@ const createDetailComponent = (name: string, key: string, fetch: any) => {
       const computedData = computed(() => {
         let ret = null
         const data = toRaw(props.data)
-        if (Object.keys(data).length) {
+        if (data && Object.keys(data).length) {
           ret = data
         } else {
           const cached = storage.session.get(key)

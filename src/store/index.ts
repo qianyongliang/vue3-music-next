@@ -13,7 +13,7 @@ interface State {
   playMode: number;
   sequenceList: Song[];
   favoriteList: Song[];
-
+  searchHistory: any
 }
 
 export default createStore({
@@ -68,6 +68,9 @@ export default createStore({
         }
         return item
       })
+    },
+    [types.SET_SEARCH_HISTORY] (state, searches) {
+      state.searchHistory = searches
     }
   },
   actions: {

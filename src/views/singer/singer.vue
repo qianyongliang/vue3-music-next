@@ -34,7 +34,6 @@ export default defineComponent({
     SingerList
   },
   setup () {
-    debugger
     const router = useRouter()
     const state = reactive({
       singers: [],

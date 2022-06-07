@@ -10,7 +10,7 @@ interface HotKeysRes {
 
 interface SearchRes {
   hasMore: boolean;
-  singer: Singer;
+  singer?: Singer;
   songs: Song[];
 }
 

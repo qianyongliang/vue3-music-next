@@ -27,7 +27,6 @@ const useMiddleInteractive = (): any => {
     if (!touch.directionLocked) {
       touch.directionLocked = absDeltaX >= absDeltaY ? 'h' : 'v'
     }
-    console.log(absDeltaX, absDeltaY, touch.directionLocked)
 
     if (touch.directionLocked === 'v') {
       return

@@ -14,3 +14,4 @@ declare module '*.vue' {
  */
 declare module 'good-storage'
 declare module 'lyric-parser'
+declare module 'throttle-debounce'

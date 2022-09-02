@@ -7,7 +7,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, watch } from 'vue'
+import { debounce } from 'throttle-debounce'
+
 export default defineComponent({
   name: 'search-input',
   props: {
@@ -17,11 +19,23 @@ export default defineComponent({
       default: '搜索歌曲、歌手'
     }
   },
-  setup (props) {
+  setup (props, { emit }) {
     const query = ref<string | undefined>(props.modelValue)
     const clear = () => {
       query.value = ''
     }
+
+    watch(() => props.modelValue, (newVal) => {
+      query.value = newVal
+    })
+    // 监听输入框的值，更新后同步到组件model上
+    watch(
+      () => query.value,
+      debounce(500, (newQuery: string) => {
+        emit('update:modelValue', newQuery.trim())
+      })
+    )
+
     return {
       query,
       clear

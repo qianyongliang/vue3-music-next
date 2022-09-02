@@ -55,25 +55,46 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, reactive, computed, toRefs, ref } from 'vue'
+import {
+  defineComponent,
+  reactive,
+  computed,
+  toRefs,
+  ref,
+  watch,
+  nextTick
+} from 'vue'
 import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import { getHotKeys } from '@/service/search'
+import useSearchHistory from '@/components/search/use-search-history'
+import { Song, Singer } from '@/service/interface'
+import { SINGER_KEY } from '@/assets/ts/constant'
+import { cache } from '@/assets/ts/array-store'
 import SearchInput from '@/components/search/search-input.vue'
-
+import SearchList from '@/components/base/search-list/search-list.vue'
+import Confirm from '@/components/base/confirm/confirm.vue'
+import Scroll from '@/components/wrap-scroll'
+import Suggest from '@/components/search/suggest.vue'
 interface State {
   hotKeys: {
     [key: string]: any
-  };
-  query: string;
+  }
+  query: string
 }
 
 export default defineComponent({
   name: 'search',
   components: {
-    SearchInput
+    SearchInput,
+    SearchList,
+    Confirm,
+    Scroll,
+    Suggest
   },
   setup () {
     const store = useStore()
+    const router = useRouter()
     const searchHistory = computed(() => store.state.searchHistory)
 
     const state = reactive({
@@ -83,13 +104,48 @@ export default defineComponent({
 
     const scrollRef = ref<any>(null)
     const confirmRef = ref<any>(null)
+    const selectedSinger = ref<any>(null)
+    const { saveSearch, deleteSearch, clearSearch } = useSearchHistory()
+
     // 热门搜索
     const getHotKeysApi = async () => {
       const result = await getHotKeys()
-      state.hotKeys = result.hotKeys
+      state.hotKeys = result?.hotKeys
     }
     getHotKeysApi()
 
+    watch(
+      () => state.query,
+      async (newQuery) => {
+        if (!newQuery) {
+          await nextTick()
+          refreshScroll()
+        }
+      }
+    )
+
+    const refreshScroll = () => {
+      scrollRef.value.scroll.refresh()
+    }
+    // 点击标签查询
+    const addQuery = (val: string) => {
+      state.query = val
+    }
+    // 点击歌曲
+    const selectSong = (song: Song) => {
+      saveSearch(state.query)
+      // store.dispatch('addSong', song)
+    }
+    // 点击歌手
+    const selectSinger = (singer: Singer) => {
+      saveSearch(state.query)
+      selectedSinger.value = singer
+      cache(SINGER_KEY, singer)
+
+      router.push({
+        path: `/search/${singer.mid}`
+      })
+    }
     // 弹窗提示
     const showConfirm = () => {
       confirmRef.value.show()
@@ -100,7 +156,13 @@ export default defineComponent({
       searchHistory,
       scrollRef,
       confirmRef,
-      showConfirm
+      selectedSinger,
+      addQuery,
+      showConfirm,
+      deleteSearch,
+      clearSearch,
+      selectSong,
+      selectSinger
     }
   }
 })

@@ -1,0 +1,2 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([["user-center"],{"92c7":function(e,n,c){"use strict";c.r(n);var r=c("7a23"),t={class:"user-center"};function s(e,n,c,s,u,a){return Object(r["y"])(),Object(r["j"])("div",t,"个人中心")}var u=Object(r["m"])({name:"user-center"}),a=c("d959"),o=c.n(a);const d=o()(u,[["render",s]]);n["default"]=d}}]);
+//# sourceMappingURL=user-center.2e461095.js.map
